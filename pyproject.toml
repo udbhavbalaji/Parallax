@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-impact-explorer"
+version = "0.1.0"
+description = "Offline, evidence-backed C call graph explorer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Code Impact Explorer contributors"}]
+dependencies = []
+
+[project.scripts]
+cie = "cie.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cie*"]

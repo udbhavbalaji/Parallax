@@ -1,0 +1,7 @@
+[
+  {"directory":".","file":"src/monitor.c","arguments":["clang","-I","include","-std=c11","-c","src/monitor.c"]},
+  {"directory":".","file":"src/state.c","arguments":["clang","-I","include","-std=c11","-c","src/state.c"]},
+  {"directory":".","file":"src/can.c","arguments":["clang","-I","include","-std=c11","-c","src/can.c"]},
+  {"directory":".","file":"src/edge_cases.c","arguments":["clang","-I","include","-std=c11","-c","src/edge_cases.c"]},
+  {"directory":".","file":"src/other.c","arguments":["clang","-I","include","-std=c11","-c","src/other.c"]}
+]
