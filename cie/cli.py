@@ -12,13 +12,13 @@ from .report import write_html
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="cie", description="Offline C function impact explorer")
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="C repository root")
+    parser = argparse.ArgumentParser(prog="cie", description="Offline C, Python, TypeScript, and Go function explorer")
+    parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root")
     parser.add_argument("--index", type=Path, help="SQLite index path, outside the repository")
     parser.add_argument("--compile-commands", type=Path, help="Existing compile_commands.json")
     parser.add_argument("--clang", default="clang", help="Clang executable")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("index", help="Index C files")
+    sub.add_parser("index", help="Index supported source files")
     explore = sub.add_parser("explore", help="Explore a function")
     selector = explore.add_mutually_exclusive_group(required=True)
     selector.add_argument("--symbol")

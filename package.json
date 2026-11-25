@@ -1,0 +1,9 @@
+{
+  "name": "code-impact-explorer-parsers",
+  "version": "0.2.0",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "5.9.3"
+  }
+}

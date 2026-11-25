@@ -20,7 +20,8 @@ def build_graph(facts: dict) -> dict:
         target = call["target"]
         if not target:
             target = f"unresolved:{call['file']}:{call['line']}:{call['column']}:{count}"
-            nodes[target] = {"id": target, "name": "Indirect / unresolved call", "file": call["file"],
+            label = call.get("target_name") or "Indirect call"
+            nodes[target] = {"id": target, "name": f"Unresolved: {label}", "file": call["file"],
                              "line": call["line"], "column": call["column"], "module": str(Path(call["file"]).with_suffix("")),
                              "type": "unresolved", "resolution": "unresolved"}
         elif target not in nodes:
