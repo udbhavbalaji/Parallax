@@ -14,7 +14,7 @@ from .clang_ast import parse_source, safe_compile_flags
 from .python_ast import parse_python
 
 
-INDEX_SCHEMA_VERSION = 5
+INDEX_SCHEMA_VERSION = 6
 LANGUAGES = {".c": "c", ".py": "python", ".go": "go", ".ts": "typescript", ".tsx": "typescript"}
 EXCLUDED_DIRS = {"node_modules", ".venv", "venv", "__pycache__", "dist", "build"}
 ANALYSIS_NOTES = {
@@ -91,6 +91,12 @@ def _group_signature(sources: list[Path], root: Path, extra: str = "") -> str:
     return hashlib.sha256(json.dumps([INDEX_SCHEMA_VERSION, details, extra]).encode()).hexdigest()
 
 
+def _parser_signature(language: str) -> str:
+    filename = {"c": "clang_ast.py", "python": "python_ast.py", "typescript": "ts_ast.cjs",
+                "go": "go_ast.go"}[language]
+    return hashlib.sha256(Path(__file__).with_name(filename).read_bytes()).hexdigest()
+
+
 def _run_adapter(command: list[str], payload: dict, root: Path, language: str, env: dict | None = None) -> dict:
     try:
         process = subprocess.run(command, input=json.dumps(payload), capture_output=True, text=True,
@@ -154,6 +160,7 @@ def index_repository(root: Path, index_path: Path | None = None,
         raise ValueError("Index must be outside the analyzed repository")
     database = _compilation_database(compile_commands or root / "compile_commands.json")
     headers = _header_signature(root)
+    c_parser = _parser_signature("c")
     groups = _source_files(root)
     sources = groups["c"]
     counts = {language: len(items) for language, items in groups.items()}
@@ -175,7 +182,7 @@ def index_repository(root: Path, index_path: Path | None = None,
             if entry and entry.get("_multiple_commands"):
                 report["coverage_warnings"].append({"file": relative, "message": "Multiple compilation commands; indexed first configuration only"})
             stat = source.stat()
-            signature = hashlib.sha256(json.dumps([INDEX_SCHEMA_VERSION, stat.st_size, stat.st_mtime_ns, headers, flags, clang,
+            signature = hashlib.sha256(json.dumps([INDEX_SCHEMA_VERSION, c_parser, stat.st_size, stat.st_mtime_ns, headers, flags, clang,
                                                    bool(entry and entry.get("_multiple_commands"))]).encode()).hexdigest()
             if known.get(relative) == signature:
                 report["cached"] += 1
@@ -200,6 +207,13 @@ def index_repository(root: Path, index_path: Path | None = None,
             extra = _go_module(root) if language == "go" else ""
             if language == "typescript" and (root / "tsconfig.json").is_file():
                 extra = hashlib.sha256((root / "tsconfig.json").read_bytes()).hexdigest()
+            extra = f"{extra}:{_parser_signature(language)}"
+            if language == "typescript":
+                module = Path(os.environ.get("CIE_TYPESCRIPT_MODULE", str(Path(__file__).resolve().parent.parent /
+                                                                       "node_modules" / "typescript")))
+                manifest = module / "package.json"
+                if manifest.is_file():
+                    extra += ":" + hashlib.sha256(manifest.read_bytes()).hexdigest()
             signature = _group_signature(language_sources, root, extra)
             paths = {str(path.relative_to(root)) for path in language_sources}
             active.update(paths)
